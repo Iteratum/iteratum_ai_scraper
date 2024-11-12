@@ -1,6 +1,7 @@
 import asyncio
 from playwright.async_api import async_playwright, Error
 from bs4 import BeautifulSoup
+import os
 
 async def init_browser():
     playwright = await async_playwright().start()
@@ -43,6 +44,7 @@ def extract_body_content(html_content):
         
     soup = BeautifulSoup(html_content, "html.parser")
     body_content = soup.body
+    return str(body_content) if body_content else ""
     return str(body_content) if body_content else ""
 
 def clean_body_content(body_content):
