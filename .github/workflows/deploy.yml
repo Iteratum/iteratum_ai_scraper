@@ -1,0 +1,39 @@
+name: Deploy to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        version: 'latest'
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker
+
+    - name: Build Docker image
+      run: docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/astrascrape-ai .
+
+    - name: Push Docker image
+      run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/astrascrape-ai
+
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy astrascrape-ai \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/astrascrape-ai \
+          --platform managed \
+          --region ${{ secrets.GCP_REGION }} \
+          --allow-unauthenticated \
+          --set-env-vars GEMINIAI_API_KEY=${{ secrets.GEMINIAI_API_KEY }}
