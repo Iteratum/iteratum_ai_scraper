@@ -1,7 +1,6 @@
 import google.generativeai as genai
 import os
 
-GEMINIAI_API_KEY = "AIzaSyCdHyTybcXmnskf8Q2eOD4vY-0QfOad6JQ"
 
 
 # Configure the API key
