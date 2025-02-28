@@ -6,7 +6,7 @@ import time
 # Initialize the Playwright browser
 def init_browser():
     playwright = sync_playwright().start()
-    browser = playwright.chromium.launch(headless=False)  # Set headless=True if you don't need a UI
+    browser = playwright.chromium.launch(headless=True)  # Always use headless mode for deployment
     context = browser.new_context(
         user_agent=random.choice([
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
