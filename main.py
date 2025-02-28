@@ -3,7 +3,10 @@ from scrape import main, extract_body_content, clean_body_content
 from ai import chat_with_gemini  # Import the updated chat function
 
 # Streamlit UI
-st.title("AI Web Scraper & Chat")
+st.set_page_config(page_title="AstraScrape AI", page_icon=":robot_face:")  # Set the page title and icon
+st.title("AstraScrape AI")  # Set the main title
+
+st.header("AI Web Scraper & Chat")  # Add a header
 
 url = st.text_input("Enter Website URL")
 

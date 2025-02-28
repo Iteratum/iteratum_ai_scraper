@@ -1,71 +1,96 @@
-import asyncio
-from playwright.async_api import async_playwright, Error
+from selenium.webdriver import ChromeOptions
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import os
+import time
+import random
 
-async def init_browser():
-    playwright = await async_playwright().start()
-    browser = await playwright.chromium.launch(headless=True)
-    return playwright, browser
+# Initialize the Selenium WebDriver
+def init_driver():
+    # Path to your ChromeDriver; specify if necessary
+    chrome_service = Service(executable_path='chromedriver.exe')
+    options = ChromeOptions()
+    
+    # Add realistic user-agent
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    ]
+    options.add_argument(f"user-agent={random.choice(user_agents)}")
+    
+    # Enable headless mode if desired
+    # options.add_argument("--headless")
+    
+    # Disable detection of automated browsing
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    
+    # Initialize WebDriver
+    return webdriver.Chrome(service=chrome_service, options=options)
 
-async def scraped_content(browser, url):
-    context = await browser.new_context()
-    page = await context.new_page()
+# Mimic human-like scrolling and random delays
+def mimic_human_behavior(driver):
+    # Scroll to the bottom of the page slowly
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    while True:
+        # Scroll down a random portion of the page
+        scroll_distance = random.randint(300, 800)
+        driver.execute_script(f"window.scrollBy(0, {scroll_distance});")
+        time.sleep(random.uniform(1, 3))  # Random delay to mimic human reading
+        
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break
+        last_height = new_height
 
+def scraped_content(driver, url):
+    print('Navigating to webpage...')
+    driver.get(url)
+    print('Page loaded. Mimicking human behavior...')
+    
+    # Mimic human-like behavior
+    mimic_human_behavior(driver)
+    
+    print('Capturing screenshot for debugging...')
+    driver.save_screenshot("page.png")
+    
+    # Extract HTML content
+    html = driver.page_source
+    print("HTML content captured")
+    return html
+
+def main(url):
+    driver = init_driver()
     try:
-        print('Navigating to webpage...')
-        await page.goto(url)
-        print('Page loaded.')
-        html_content = await page.content()
-    except Error as e:
-        print(f"Error occurred while loading page: {e}")
-        html_content = None
+        html_content = scraped_content(driver, url)
     finally:
-        await page.screenshot(path="page.png")
-        await context.close()
-
-    return html_content
-
-async def main(url):
-    playwright, browser = await init_browser()
-    try:
-        html_content = await scraped_content(browser, url)
-        if html_content is None:
-            raise ValueError("Failed to retrieve page content.")
-    finally:
-        await browser.close()
-        await playwright.stop()
+        driver.quit()
     return html_content
 
 def extract_body_content(html_content):
-    if not html_content:
-        print("Warning: No HTML content provided.")
-        return ""
-        
     soup = BeautifulSoup(html_content, "html.parser")
     body_content = soup.body
-    return str(body_content) if body_content else ""
-    return str(body_content) if body_content else ""
+    if body_content:
+        return str(body_content)
+    return ""
 
 def clean_body_content(body_content):
-    if not body_content:
-        print("Warning: No body content provided.")
-        return ""
-    
     soup = BeautifulSoup(body_content, "html.parser")
     for script_or_style in soup(["script", "style"]):
         script_or_style.extract()
 
+    # Get text or further process the content
     cleaned_content = soup.get_text(separator="\n")
-    cleaned_content = "\n".join(line.strip() for line in cleaned_content.splitlines() if line.strip())
+    cleaned_content = "\n".join(
+        line.strip() for line in cleaned_content.splitlines() if line.strip()
+    )
     return cleaned_content
 
-# To run the async main function from a synchronous script
-if __name__ == "__main__":
-    url = "https://example.com"  # Replace with the actual URL
-    try:
-        dom_content = asyncio.run(main(url))
-        body_content = extract_body_content(dom_content)
-        print(body_content)
-    except Exception as e:
-        print(f"Error in scraping process: {e}")
+def split_dom_content(dom_content, max_length=6000):
+    return [
+        dom_content[i : i + max_length] for i in range(0, len(dom_content), max_length)
+    ]
