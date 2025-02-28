@@ -1,10 +1,11 @@
 import google.generativeai as genai
 import os
 
-
-
 # Configure the API key
-#GEMINIAI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINIAI_API_KEY = os.getenv("GEMINIAI_API_KEY")
+if GEMINIAI_API_KEY is None:
+    raise ValueError("No GEMINIAI_API_KEY found in environment variables")
+
 genai.configure(api_key=GEMINIAI_API_KEY)
 
 # Define generation configuration parameters
@@ -40,7 +41,6 @@ def chat_with_gemini(message, dom_content):
     full_message = f"Content to parse:\n\n{dom_content}\n\nUser query: {message}"
     response = chat_session.send_message(full_message)
     return response.text
-
 
 def parse_with_gemini(parse_description):
     genai.configure(api_key=GEMINIAI_API_KEY)

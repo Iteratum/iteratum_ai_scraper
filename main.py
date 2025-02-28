@@ -1,6 +1,12 @@
+# filepath: /C:/Users/LENOVO USER/iteratum_ai_scraper/main.py
 import streamlit as st
 from scrape import main, extract_body_content, clean_body_content
 from ai import chat_with_gemini  # Import the updated chat function
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Streamlit UI
 st.set_page_config(page_title="AstraScrape AI", page_icon=":robot_face:")  # Set the page title and icon
